@@ -1,8 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.param_functions import Body
 
-from api.v1.tasks import router as tasks_router
-from api.v1.users import router as users_router
+from api.v1 import tasks_router, users_router
 
 app = FastAPI()
 
