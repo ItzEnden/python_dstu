@@ -1,7 +1,8 @@
 from typing import TypedDict
 
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
+
+from schemas import TaskIn
 
 
 class Task(TypedDict):
@@ -10,11 +11,6 @@ class Task(TypedDict):
     status: int
 
 tasks: list[Task] = []
-
-
-class TaskIn(BaseModel):
-    title: str
-    priority: int = Field(default=0, ge=1, le=5)
 
     
 router = APIRouter()
