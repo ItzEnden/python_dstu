@@ -1,4 +1,12 @@
+from typing import TypedDict
+
 from pydantic import BaseModel, Field
+
+
+class Task(TypedDict):
+    id: int
+    title: str
+    priority: int
 
 
 class TaskIn(BaseModel):
