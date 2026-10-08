@@ -21,6 +21,6 @@ async def debug(request: Request, json_data = Body(...)):
     # json_data = await request.json()
     headers = dict(request.headers)
     query_params = dict(request.query_params)
-    ip = request.client.host
+    ip = request.client.host if request.client is not None else None
 
     return {"ip": ip, "body": body, "query_params": query_params, "headers": headers, "json_data": json_data}

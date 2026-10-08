@@ -1,70 +1,38 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, Response
 
 from schemas import CreateUserRequest, UpdateUserRequest, User, UserResponse
-
-users: list[User] = []
-
-
-def find_user(user_id: int) -> User:
-    for user in users:
-        if user["id"] == user_id:
-            return user
-
-    raise HTTPException(status_code=404, detail="User not found")
+from services.users import UserService
 
 
-router = APIRouter()
+router = APIRouter(tags=["users"])
+
 
 @router.post("/v1/users", status_code=201, response_model=UserResponse)
-def create_user(user: CreateUserRequest) -> User:
-    new_user: User = {
-        "id": len(users) + 1,
-        "email": user.email,
-        "username": user.username,
-        "password": user.password,
-    }
+def create_user(user: CreateUserRequest, service: UserService = Depends()) -> User:
+    return service.create_user(user)
 
-    users.append(new_user)
 
-    return new_user
+@router.get("/v1/users", response_model=list[UserResponse])
+def get_users(service: UserService = Depends()) -> list[User]:
+    return service.get_all_users()
 
 
 @router.get("/v1/users/{user_id}", response_model=UserResponse)
-def get_user(user_id: int) -> User:
-    return find_user(user_id)
+def get_user(user_id: int, service: UserService = Depends()) -> User:
+    return service.get_user_by_id(user_id)
 
 
 @router.put("/v1/users/{user_id}", response_model=UserResponse)
-def replace_user(user_id: int, data: CreateUserRequest) -> User:
-    user = find_user(user_id)
-
-    user["email"] = data.email
-    user["username"] = data.username
-    user["password"] = data.password
-
-    return user
+def replace_user(user_id: int, data: CreateUserRequest, service: UserService = Depends()) -> User:
+    return service.replace_user(user_id, data)
 
 
 @router.patch("/v1/users/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, data: UpdateUserRequest) -> User:
-    user = find_user(user_id)
-
-    if data.email is not None:
-        user["email"] = data.email
-
-    if data.username is not None:
-        user["username"] = data.username
-
-    if data.password is not None:
-        user["password"] = data.password
-
-    return user
+def update_user(user_id: int, data: UpdateUserRequest, service: UserService = Depends()) -> User:
+    return service.update_user(user_id, data)
 
 
 @router.delete("/v1/users/{user_id}", status_code=204)
-def delete_user(user_id: int) -> Response:
-    user = find_user(user_id)
-
-    users.remove(user)
-
+def delete_user(user_id: int, service: UserService = Depends()) -> Response:
+    service.delete_user(user_id)
     return Response(status_code=204)
