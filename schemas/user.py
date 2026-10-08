@@ -1,13 +1,4 @@
-from typing import TypedDict
-
-from pydantic import BaseModel, EmailStr, Field, field_validator
-
-
-class User(TypedDict):
-    id: int
-    email: EmailStr
-    username: str
-    password: str
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 def _validate_password(value: str) -> str:
@@ -41,6 +32,8 @@ class UpdateUserRequest(BaseModel):
 
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     username: str
     email: EmailStr

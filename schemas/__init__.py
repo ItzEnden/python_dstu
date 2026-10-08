@@ -1,12 +1,11 @@
-from .task import Task, TaskIn, TaskPatch
-from .user import CreateUserRequest, UpdateUserRequest, User, UserResponse
+from .task import TaskIn, TaskPatch, TaskResponse
+from .user import CreateUserRequest, UpdateUserRequest, UserResponse
 
 __all__ = [
     "CreateUserRequest",
-    "Task",
     "TaskIn",
     "TaskPatch",
+    "TaskResponse",
     "UpdateUserRequest",
-    "User",
     "UserResponse",
 ]

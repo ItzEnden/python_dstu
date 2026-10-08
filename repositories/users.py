@@ -1,55 +1,68 @@
-from pydantic import EmailStr
+from fastapi import Depends
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-from schemas import User
-
-
-_users: dict[int, User] = {}
+from core.database import get_db
+from models.users import UserModel
 
 
 class UserRepository:
-    def get_user_by_email(self, email: EmailStr) -> User | None:
-        return next((user for user in _users.values() if user["email"] == email), None)
+    def __init__(self, db: Session = Depends(get_db)) -> None:
+        self.db = db
 
-    def get_user_by_username(self, username: str) -> User | None:
-        return next((user for user in _users.values() if user["username"] == username), None)
+    def get_user_by_email(self, email: str) -> UserModel | None:
+        statement = select(UserModel).where(UserModel.email == email)
+        return self.db.scalar(statement)
 
-    def create_user(self, username: str, email: EmailStr, password: str) -> User:
-        user_id = max(_users, default=0) + 1
-        user: User = {
-            "id": user_id,
-            "username": username,
-            "email": email,
-            "password": password,
-        }
-        _users[user_id] = user
+    def get_user_by_username(self, username: str) -> UserModel | None:
+        statement = select(UserModel).where(UserModel.username == username)
+        return self.db.scalar(statement)
+
+    def create_user(self, username: str, email: str, password: str) -> UserModel:
+        user = UserModel(username=username, email=email, password=password)
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
         return user
 
-    def get_all_users(self) -> list[User]:
-        return list(_users.values())
+    def get_all_users(self) -> list[UserModel]:
+        statement = select(UserModel).order_by(UserModel.id)
+        return list(self.db.scalars(statement).all())
 
-    def get_user_by_id(self, user_id: int) -> User | None:
-        return _users.get(user_id)
+    def get_user_by_id(self, user_id: int) -> UserModel | None:
+        return self.db.get(UserModel, user_id)
 
-    def replace_user(self, user_id: int, username: str, email: EmailStr, password: str) -> User:
-        user = _users[user_id]
-        user.update(username=username, email=email, password=password)
+    def replace_user(
+        self,
+        user: UserModel,
+        username: str,
+        email: str,
+        password: str,
+    ) -> UserModel:
+        user.username = username
+        user.email = email
+        user.password = password
+        self.db.commit()
+        self.db.refresh(user)
         return user
 
     def update_user(
         self,
-        user_id: int,
+        user: UserModel,
         username: str | None,
-        email: EmailStr | None,
+        email: str | None,
         password: str | None,
-    ) -> User:
-        user = _users[user_id]
+    ) -> UserModel:
         if username is not None:
-            user["username"] = username
+            user.username = username
         if email is not None:
-            user["email"] = email
+            user.email = email
         if password is not None:
-            user["password"] = password
+            user.password = password
+        self.db.commit()
+        self.db.refresh(user)
         return user
 
-    def delete_user(self, user_id: int) -> None:
-        del _users[user_id]
+    def delete_user(self, user: UserModel) -> None:
+        self.db.delete(user)
+        self.db.commit()
