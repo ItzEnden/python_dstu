@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, HTTPException
 
+from core.exceptions import NotFoundError
 from models.tasks import TaskModel
 from schemas import TaskIn, TaskPatch, TaskResponse
 from services.tasks import TaskService
@@ -20,20 +21,31 @@ def post_tasks(task: TaskIn, service: TaskService = Depends()) -> TaskModel:
 
 @router.get("/v1/tasks/{task_id}", response_model=TaskResponse)
 def get_task(task_id: int, service: TaskService = Depends()) -> TaskModel:
-    return service.get_task_by_id(task_id)
+    try:
+        return service.get_task_by_id(task_id)
+    except NotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
 
 
 @router.put("/v1/tasks/{task_id}", response_model=TaskResponse)
 def replace_task(task_id: int, data: TaskIn, service: TaskService = Depends()) -> TaskModel:
-    return service.replace_task(task_id, data)
+    try:
+        return service.replace_task(task_id, data)
+    except NotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
 
 
 @router.patch("/v1/tasks/{task_id}", response_model=TaskResponse)
 def update_task(task_id: int, data: TaskPatch, service: TaskService = Depends()) -> TaskModel:
-    return service.update_task(task_id, data)
+    try:
+        return service.update_task(task_id, data)
+    except NotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
 
 
 @router.delete("/v1/tasks/{task_id}", status_code=204)
-def delete_task(task_id: int, service: TaskService = Depends()) -> Response:
-    service.delete_task(task_id)
-    return Response(status_code=204)
+def delete_task(task_id: int, service: TaskService = Depends()) -> None:
+    try:
+        service.delete_task(task_id)
+    except NotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error

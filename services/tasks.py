@@ -1,5 +1,6 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 
+from core.exceptions import NotFoundError
 from models.tasks import TaskModel
 from repositories.tasks import TaskRepository
 from schemas import TaskIn, TaskPatch
@@ -18,7 +19,7 @@ class TaskService:
     def get_task_by_id(self, task_id: int) -> TaskModel:
         task = self.repo.get_task_by_id(task_id)
         if task is None:
-            raise HTTPException(status_code=404, detail="Task not found")
+            raise NotFoundError("Task not found")
         return task
 
     def replace_task(self, task_id: int, data: TaskIn) -> TaskModel:
