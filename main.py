@@ -2,11 +2,15 @@ from fastapi import FastAPI, Request
 from fastapi.param_functions import Body
 
 from api.v1 import tasks_router, users_router
+from core.database import Base, engine
+
 
 app = FastAPI()
 
 app.include_router(tasks_router)
 app.include_router(users_router)
+
+Base.metadata.create_all(bind=engine)
 
 
 @app.get("/")
